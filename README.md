@@ -4,8 +4,7 @@
 This scripts allows the user to solve any knapsack problem, if dataset are predespouse in the same way as the examples. In this script is allowed to select between two solvers to get the knapsack solution: dynamic programming or ortools solver.
 </font>
 <br>
-<br>
-<br>
+
 
 <font size="3">
 
