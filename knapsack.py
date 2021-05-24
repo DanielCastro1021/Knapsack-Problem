@@ -4,62 +4,46 @@ from tabulate import tabulate
 from ortools.algorithms import pywrapknapsack_solver
 
 
-class KnapsackSolver:
+def dynamic_programming_solver(capacity, weights, values, time_limit):
+    W, wt, val = capacity, weights, values
+    n = len(val)
+    K = [[0 for x in range(W + 1)] for x in range(n + 1)]
 
-    def __init__(self, capacity, values, weights, solver, time_limit):
-        self.capacity, self.values, self.weights, self.time_limit = int(
-            capacity), values, weights, time_limit
+    start_time = time.perf_counter()
+    time_limit = start_time+time_limit
 
-        if solver == "dynamic_programming_solver":
-            self.solver = self.dynamic_programming_solver
-        elif solver == "ortools_solver":
-            self.solver = self.ortools_solver
-        else:
-            raise Exception("Solver not found.")
+    for i in range(n + 1):
+        for w in range(W + 1):
+            current_time = time.perf_counter()
+            if(current_time >= time_limit):
+                solution = K[i][w]
+                time_to_solve = round(current_time - start_time, 3)
+                return solution, time_to_solve
 
-    def solve(self):
-        return self.solver()
+            if i == 0 or w == 0:
+                K[i][w] = 0
+            elif wt[i-1] <= w:
+                K[i][w] = max(val[i-1] + K[i-1][w-wt[i-1]],  K[i-1][w])
+            else:
+                K[i][w] = K[i-1][w]
 
-    def dynamic_programming_solver(self):
+    solution = K[n][W]
+    time_to_solve = round(time.perf_counter()-start_time, 3)
+    return solution, time_to_solve
 
-        W, wt, val = self.capacity, self.weights, self.values
-        n = len(val)
-        K = [[0 for x in range(W + 1)] for x in range(n + 1)]
 
-        start_time = time.perf_counter()
-        time_limit = start_time+self.time_limit
+def ortools_solver(capacity, weights, values, time_limit):
+    solver = pywrapknapsack_solver.KnapsackSolver(
+        pywrapknapsack_solver.KnapsackSolver.
+        KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'KnapsackExample')
+    solver.set_time_limit(time_limit)
 
-        for i in range(n + 1):
-            for w in range(W + 1):
-                current_time = time.perf_counter()
-                if(current_time >= time_limit):
-                    solution = K[i][w]
-                    time_to_solve = round(current_time - start_time, 3)
-                    return solution, time_to_solve
+    start_time = time.perf_counter()
+    solver.Init(values, [weights], [capacity])
+    solution = solver.Solve()
+    time_to_solve = round(time.perf_counter()-start_time, 3)
 
-                if i == 0 or w == 0:
-                    K[i][w] = 0
-                elif wt[i-1] <= w:
-                    K[i][w] = max(val[i-1] + K[i-1][w-wt[i-1]],  K[i-1][w])
-                else:
-                    K[i][w] = K[i-1][w]
-
-        solution = K[n][W]
-        time_to_solve = round(time.perf_counter()-start_time, 3)
-        return solution, time_to_solve
-
-    def ortools_solver(self):
-        solver = pywrapknapsack_solver.KnapsackSolver(
-            pywrapknapsack_solver.KnapsackSolver.
-            KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'KnapsackExample')
-        solver.set_time_limit(self.time_limit)
-
-        start_time = time.perf_counter()
-        solver.Init(self.values, [self.weights], [self.capacity])
-        solution = solver.Solve()
-        time_to_solve = round(time.perf_counter()-start_time, 3)
-
-        return solution, format(time_to_solve, '.3f')
+    return solution, format(time_to_solve, '.3f')
 
 
 def get_optimum_solution(file):
@@ -80,10 +64,13 @@ def get_solution(file, solver, time_limit):
                 weights.append(int(weight))
             except:
                 pass
-    knapsack_solver = KnapsackSolver(
-        capacity, values, weights, solver, time_limit)
 
-    return knapsack_solver.solve()
+    if solver == "ortools_solver":
+        return ortools_solver(capacity, weights, values, time_limit)
+    elif solver == "dynamic_programming_solver":
+        return dynamic_programming_solver(capacity, weights, values, time_limit)
+    else:
+        raise Exception("Solver Not Found")
 
 
 def main(folder, current_dataset, solver, time_limit):
