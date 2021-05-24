@@ -5,7 +5,7 @@ from ortools.algorithms import pywrapknapsack_solver
 
 
 def dynamic_programming_solver(capacity, weights, values, time_limit):
-    W, wt, val = capacity, weights, values
+    W, wt, val = int(capacity), weights, values
     n = len(val)
     K = [[0 for x in range(W + 1)] for x in range(n + 1)]
 
@@ -28,6 +28,7 @@ def dynamic_programming_solver(capacity, weights, values, time_limit):
                 K[i][w] = K[i-1][w]
 
     solution = K[n][W]
+
     time_to_solve = round(time.perf_counter()-start_time, 3)
     return solution, time_to_solve
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         1: "low-dimensional", 2: "large_scale"}, {1: "dynamic_programming_solver",  2: "ortools_solver"}
 
     current_dataset = datasets.get(1)
-    solver = solvers.get(2)
+    solver = solvers.get(1)
     time_limit = 10.00
 
     main(folder, current_dataset, solver, time_limit)
